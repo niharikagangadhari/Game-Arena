@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>GameArena Live Scoreboard</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+		<header>
+			GameArena
+		</header>
+		<div class="container">
+			<div class="card">
+				<h2>Scoreboard</h2>
+				<div>
+					<input type="text" id="playerName" placeholder="Player name">
+					<input type="number" id="playerScore" placeholder="Score">
+					<button onclick="addPlayer()">Add Player</button>
+				</div>
+				<table id="scoreboard">
+					<tr>
+						<th>Player</th>
+						<th>Score</th>
+					</tr>
+				</table>
+			</div>
+			<div class="card">
+				<h2>Live Events</h2>
+				<div>
+					<input type="text" id="eventText" placeholder="Event description">
+					<button onclick="addEvent()">Add Event</button>
+				</div>
+				<ul class="event-log" id="events"></ul>
+			</div>
+			<div class="card">
+				<h2>Achievements</h2>
+				<div>
+					<select id="achievementPlayer"></select>
+					<input type="text" id="achievementTitle" placeholder="Achievement title">
+					<select id="achievementRarity">
+						<option value="common">Common</option>
+						<option value="rare">Rare</option>
+						<option value="epic">Epic</option>
+						<option value="legendary">Legendary</option>
+					</select>
+					<button onclick="addAchievement()">Add Achievement</button>
+				</div>
+				<div id="achievements"></div>
+			</div>
+		</div>
+		<script>
+			let players = [];
+			let events = [];
+			let achievements = [];
+			const rarityIcons = {
+				common: "★",
+				rare: "★",
+				epic: "★",
+				legendary: "★"
+			};
+			const scoreMilestones = [
+				{ score: 500, title: "Rookie", rarity: "common" },
+				{ score: 1000, title: "Pro Player", rarity: "rare" },
+				{ score: 2000, title: "Elite Warrior", rarity: "epic" },
+				{ score: 5000, title: "Legend", rarity: "legendary" }
+			];
+			function addPlayer() {
+				const name = document.getElementById("playerName").value.trim();
+				const score = parseInt(document.getElementById("playerScore").value);
+				if (!name || isNaN(score)) {
+					alert("Enter a valid name and score.");
+					return;
+				}
+				players.push({ name, score, milestones: [] });
+				addEvent(`${name} joined the game with ${score} points!`, false);
+				updateScoreboard();
+				updateEvents();
+				updatePlayerDropdown();
+				checkMilestones(name);
+				document.getElementById("playerName").value = "";
+				document.getElementById("playerScore").value = "";
+			}
+			function checkMilestones(playerName) {
+				let player = players.find(p => p.name === playerName);
+				scoreMilestones.forEach(m => {
+					if (player.score >= m.score && !player.milestones.includes(m.score)) {
+						player.milestones.push(m.score);
+						achievements.push({
+							player: player.name,
+							title: m.title,
+							rarity: m.rarity
+						});
+						addEvent(`${player.name} unlocked "${m.title}"!`, false);
+						updateAchievements();
+						updateEvents();
+					}
+				});
+			}
+			function addEvent(text, fromForm = true) {
+				if (fromForm) {
+					text = document.getElementById("eventText").value.trim();
+					if (!text) {
+						alert("Enter an event description.");
+						return;
+					}
+					document.getElementById("eventText").value = "";
+				}
+				events.push(text);
+				updateEvents();
+			}
+			function addAchievement() {
+				const player = document.getElementById("achievementPlayer").value;
+				const title = document.getElementById("achievementTitle").value.trim();
+				const rarity = document.getElementById("achievementRarity").value;
+				if (!player || !title) {
+					alert("Enter both player and achievement title.");
+					return;
+				}
+				achievements.push({ player, title, rarity });
+				addEvent(`${player} earned "${title}"!`, false);
+				updateAchievements();
+				updateEvents();
+				document.getElementById("achievementTitle").value = "";
+			}
+			function updatePlayerDropdown() {
+				const dropdown = document.getElementById("achievementPlayer");
+				dropdown.innerHTML = "";
+				players.forEach(p => {
+					dropdown.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+				});
+			}
+			function updateScoreboard() {
+				const table = document.getElementById("scoreboard");
+				table.innerHTML = "<tr><th>Player</th><th>Score</th></tr>";
+				players.sort((a, b) => b.score - a.score)
+				.forEach(p => {
+					table.innerHTML += `<tr>
+						<td>${p.name}</td>
+						<td>${p.score}</td>
+						</tr>`;
+					});
+			}
+			function updateEvents() {
+				const log = document.getElementById("events");
+				log.innerHTML = "";
+				events.slice().reverse().forEach(e => {
+					log.innerHTML += `<li>${e}</li>`;
+				});
+			}
+			function updateAchievements() {
+				const list = document.getElementById("achievements");
+				list.innerHTML = "";
+				achievements.forEach(a => {
+					list.innerHTML += `
+					<div class="achievement ${a.rarity}">
+						<span class="icon">${rarityIcons[a.rarity]}</span>
+					<span><b>${a.player}</b> — ${a.title}</span>
+					</div>
+					`;
+				});
+			}
+			updateScoreboard();
+			updateEvents();
+			updateAchievements();
+			updatePlayerDropdown();
+		</script>
+	</body>
+</html>
